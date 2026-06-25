@@ -1,111 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-/* ===== Animated Background Components ===== */
-function Starfield() {
-  const stars = Array.from({ length: 50 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    duration: 2 + Math.random() * 3,
-    delay: Math.random() * 3,
-  }));
-
-  return (
-    <div className="starfield">
-      {stars.map(s => (
-        <div
-          key={s.id}
-          className="star"
-          style={{
-            left: `${s.left}%`,
-            top: `${s.top}%`,
-            '--duration': `${s.duration}s`,
-            '--delay': `${s.delay}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function GoldenParticles() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    duration: 8 + Math.random() * 10,
-    delay: Math.random() * 8,
-  }));
-
-  return (
-    <div className="golden-particles">
-      {particles.map(p => (
-        <div
-          key={p.id}
-          className="golden-particle"
-          style={{
-            left: `${p.left}%`,
-            '--duration': `${p.duration}s`,
-            '--delay': `${p.delay}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function RacingCars() {
-  const Car1 = () => (
-    <div className="racing-car car-1">
-      <div className="car-body gryffindor">
-        <div className="cockpit" />
-        <div className="spoiler" />
-        <div className="gryffindor-stripe" />
-        <div className="car-wheels">
-          <div className="wheel" />
-          <div className="wheel" />
-        </div>
-        <div className="wizard-hat" />
-        <div className="wizard-hat-brim" />
-        <span className="hat-star">★</span>
-      </div>
-      <div className="exhaust-flame" />
-    </div>
-  );
-
-  const Car2 = () => (
-    <div className="racing-car car-2">
-      <div className="car-body slytherin">
-        <div className="cockpit" />
-        <div className="spoiler" />
-        <div className="slytherin-stripe" />
-        <div className="car-wheels">
-          <div className="wheel" />
-          <div className="wheel" />
-        </div>
-        <div className="wizard-hat" />
-        <div className="wizard-hat-brim" />
-        <span className="hat-star">★</span>
-      </div>
-      <div className="exhaust-flame" />
-    </div>
-  );
-
-  return (
-    <div className="racing-cars-container">
-      <Car1 />
-      <Car2 />
-      <div className="race-track-line" />
-    </div>
-  );
-}
-
 /* ===== Sparkle Decorators ===== */
-function SparkleDecorators() {
-  const sparkles = Array.from({ length: 4 }, (_, i) => ({
+function CosmicSparkles() {
+  const sparkles = Array.from({ length: 6 }, (_, i) => ({
     id: i,
-    top: 10 + Math.random() * 40,
-    left: -10 + Math.random() * 110,
+    top: 5 + Math.random() * 50,
+    left: -5 + Math.random() * 110,
     delay: Math.random() * 3,
   }));
 
@@ -116,13 +17,17 @@ function SparkleDecorators() {
           key={s.id}
           className="sparkle-emoji"
           style={{
+            position: 'absolute',
             top: `${s.top}%`,
             left: `${s.left}%`,
             animationDelay: `${s.delay}s`,
             animationDuration: `${1.5 + Math.random()}s`,
+            pointerEvents: 'none',
+            fontSize: '1.2rem',
+            animation: 'sparkle-fade 2s ease-in-out infinite',
           }}
         >
-          ✨
+          ✦
         </span>
       ))}
     </>
@@ -159,7 +64,7 @@ export default function SetupPage() {
   const handleFileChange = async (selectedFile) => {
     if (!selectedFile) return;
     if (!selectedFile.name.endsWith('.pptx')) {
-      setError('Only .pptx enchantments accepted');
+      setError('Only .pptx files accepted');
       return;
     }
     setError('');
@@ -215,43 +120,33 @@ export default function SetupPage() {
     }
   };
 
-  const difficultyHouse = {
-    'Simple': 'hufflepuff',
-    'Medium': 'ravenclaw',
-    'Complex': 'gryffindor',
-  };
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
-      {/* Background Effects */}
-      <Starfield />
-      <GoldenParticles />
-      <RacingCars />
-      <div className="fog-overlay" />
-
-      <div className="w-full max-w-[600px] mx-auto relative z-10">
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-[540px] mx-auto relative z-10">
         {/* Glass Card */}
         <div className="glass-card">
           <div className="shimmer-border" />
-          <SparkleDecorators />
+          <CosmicSparkles />
 
           <div className="main-card-content text-center">
             {/* Logo */}
-            <div className="mb-6">
-              <span className="text-5xl floating-lightning">⚡</span>
+            <div className="mb-5">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--cosmic-purple)] to-[var(--cosmic-blue)] shadow-lg shadow-[var(--cosmic-glow)] mb-4">
+                <span className="text-3xl floating">✦</span>
+              </div>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-black gold-glow mb-2">
-              The Sorting Ceremony
+            <h1 className="text-3xl md:text-4xl font-black glow-text mb-2">
+              Generate Your Quiz
             </h1>
-            <p className="text-[var(--sage-green)] text-sm md:text-base mb-8">
-              Upload your sacred scroll (PowerPoint) to begin
+            <p className="text-[var(--text-secondary)] text-sm md:text-base mb-8">
+              Upload your presentation to create an AI-powered quiz
             </p>
 
             {/* Error */}
             {error && (
-              <div className="mb-6 p-3 rounded-xl border border-[var(--gryffindor-red)] bg-[rgba(196,30,58,0.1)]">
-                <p className="text-[var(--gryffindor-red)] font-semibold text-sm">{error}</p>
+              <div className="mb-6 p-3 rounded-xl border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.06)]">
+                <p className="text-[var(--danger)] font-semibold text-sm">{error}</p>
               </div>
             )}
 
@@ -259,25 +154,27 @@ export default function SetupPage() {
             {step === 1 && (
               <div className="space-y-6">
                 <div
-                  className={`upload-zone p-10 text-center transition-all ${dragOver ? 'ring-2 ring-[var(--magical-gold)]' : ''}`}
+                  className={`upload-zone p-10 text-center transition-all ${dragOver ? 'ring-2 ring-[var(--cosmic-purple)]' : ''}`}
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFileChange(e.dataTransfer.files[0]); }}
                 >
                   <div className="mb-4">
-                    <span className="wand-icon">✦</span>
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[rgba(139,92,246,0.1)] border border-[rgba(139,92,246,0.2)]">
+                      <span className="text-2xl floating">✦</span>
+                    </div>
                   </div>
-                  <p className="text-lg font-bold text-[var(--magical-gold)]">
-                    {dragOver ? 'Release your scroll!' : 'Drop your .pptx scroll here'}
+                  <p className="text-lg font-bold text-[var(--text-primary)]">
+                    {dragOver ? 'Release to upload!' : 'Drop your file here'}
                   </p>
-                  <p className="mt-2 text-sm text-[var(--sage-green)]">
-                    Only .pptx enchantments accepted · Max 25MB
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">
+                    Supports .pptx files up to 25MB
                   </p>
                   {loading && (
                     <div className="mt-6 flex items-center justify-center gap-3">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--magical-gold)] border-t-transparent" />
-                      <span className="font-semibold text-[var(--magical-gold)]">Parsing with ancient magic...</span>
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--cosmic-purple)] border-t-transparent" />
+                      <span className="font-semibold text-[var(--cosmic-purple)]">Processing with AI...</span>
                     </div>
                   )}
                 </div>
@@ -290,13 +187,13 @@ export default function SetupPage() {
               <div className="space-y-8">
                 {/* Success Banner */}
                 <div className="slide-up">
-                  <div className="p-4 rounded-2xl border border-[rgba(92,184,92,0.3)] bg-[rgba(92,184,92,0.08)]">
+                  <div className="p-4 rounded-2xl border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)]">
                     <div className="flex items-center gap-3 justify-center">
-                      <span className="text-2xl">✓</span>
+                      <span className="text-2xl" style={{ color: 'var(--success)' }}>✓</span>
                       <div>
-                        <p className="text-[var(--sage-green)] font-bold">{file.name}</p>
-                        <p className="text-sm" style={{ color: '#5cb85c' }}>
-                          Scroll parsed! {parseResult.slideCount} slides of ancient knowledge extracted
+                        <p className="text-[var(--text-primary)] font-bold">{file.name}</p>
+                        <p className="text-sm" style={{ color: 'var(--success)' }}>
+                          {parseResult.slideCount} slides parsed successfully
                         </p>
                       </div>
                     </div>
@@ -307,8 +204,8 @@ export default function SetupPage() {
                 <div className="slide-up delay-1">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[var(--magical-gold)]">Number of questions</label>
-                      <span className="text-3xl font-black" style={{ color: 'var(--gryffindor-red)' }}>{numQuestions}</span>
+                      <label className="font-bold text-[var(--text-primary)]">Number of questions</label>
+                      <span className="text-3xl font-black gradient-text">{numQuestions}</span>
                     </div>
                     <input
                       type="range"
@@ -318,30 +215,31 @@ export default function SetupPage() {
                       onChange={(e) => setNumQuestions(Number(e.target.value))}
                       className="w-full"
                     />
-                    <div className="flex justify-between text-xs font-semibold text-[var(--sage-green)]">
-                      <span>★ 5</span>
-                      <span>★ 30</span>
+                    <div className="flex justify-between text-xs font-semibold text-[var(--text-muted)]">
+                      <span>✦ 5</span>
+                      <span>✦ 30</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Difficulty as Houses */}
+                {/* Difficulty */}
                 <div className="slide-up delay-2">
                   <div className="space-y-3">
-                    <label className="block font-bold text-[var(--magical-gold)]">Choose your house</label>
+                    <label className="block font-bold text-[var(--text-primary)]">Difficulty level</label>
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { label: 'Simple', house: 'hufflepuff', emoji: '🦡' },
-                        { label: 'Medium', house: 'ravenclaw', emoji: '🦅' },
-                        { label: 'Complex', house: 'gryffindor', emoji: '🦁' },
-                      ].map(({ label, house, emoji }) => (
+                        { label: 'Easy', emoji: '✦', desc: 'Basic concepts' },
+                        { label: 'Medium', emoji: '✦✦', desc: 'Moderate' },
+                        { label: 'Hard', emoji: '✦✦✦', desc: 'Advanced' },
+                      ].map(({ label, emoji, desc }) => (
                         <button
                           key={label}
                           onClick={() => setDifficulty(label)}
-                          className={`house-btn ${house} ${difficulty === label ? 'selected' : ''}`}
+                          className={`house-btn ${difficulty === label ? 'selected' : ''}`}
                         >
-                          <div className="text-2xl mb-1">{emoji}</div>
-                          <div>{label}</div>
+                          <div className="text-lg mb-1">{emoji}</div>
+                          <div className="font-bold">{label}</div>
+                          <div className="text-xs text-[var(--text-muted)] mt-0.5">{desc}</div>
                         </button>
                       ))}
                     </div>
@@ -356,16 +254,16 @@ export default function SetupPage() {
                       handleGenerate();
                     }}
                     disabled={loading}
-                    className={`magical-btn w-full py-4 text-lg flex items-center justify-center gap-3 ${sparkling ? 'animate-pulse' : ''}`}
+                    className={`cosmic-btn w-full py-4 text-lg flex items-center justify-center gap-3 ${sparkling ? 'animate-pulse' : ''}`}
                   >
                     {loading ? (
                       <>
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--magical-gold)] border-t-transparent" />
-                        Conjuring questions...
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Generating questions...
                       </>
                     ) : (
                       <>
-                        ⚡ Cast the Quiz Spell
+                        ✦ Generate Quiz
                       </>
                     )}
                   </button>
@@ -375,9 +273,9 @@ export default function SetupPage() {
                 <div className="slide-up delay-4">
                   <button
                     onClick={() => { setStep(1); setFile(null); setParseResult(null); }}
-                    className="w-full py-3 rounded-xl border border-[var(--gold-border)] bg-transparent font-semibold text-[var(--sage-green)] transition-all hover:bg-[rgba(255,215,0,0.05)]"
+                    className="secondary-btn w-full"
                   >
-                    ← Wingardium Upload-a different file
+                    ← Upload a different file
                   </button>
                 </div>
               </div>

@@ -7,7 +7,7 @@ export default function HistoryPage() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    const storedHistory = JSON.parse(localStorage.getItem('quiz_history') || '[]');
+    const storedHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]');
     setHistory(storedHistory.sort((a, b) => new Date(b.date) - new Date(a.date)));
   }, []);
 
@@ -16,45 +16,49 @@ export default function HistoryPage() {
   };
 
   const handleClearHistory = () => {
-    localStorage.removeItem('quiz_history');
+    localStorage.removeItem('quizHistory');
     setHistory([]);
     setShowConfirm(false);
   };
 
   const getScoreColor = (percentage) => {
-    if (percentage >= 80) return 'text-green-400';
-    if (percentage >= 50) return 'text-blue-400';
-    return 'text-red-400';
+    if (percentage >= 80) return 'text-[var(--success)]';
+    if (percentage >= 50) return 'text-[var(--cosmic-cyan)]';
+    return 'text-[var(--danger)]';
   };
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty?.toLowerCase()) {
       case 'easy':
-        return 'bg-green-500/10 border-green-500/30 text-green-300';
+        return 'bg-[rgba(16,185,129,0.1)] border-[rgba(16,185,129,0.2)] text-[var(--success)]';
       case 'medium':
-        return 'bg-blue-500/10 border-blue-500/30 text-blue-300';
+        return 'bg-[rgba(139,92,246,0.1)] border-[rgba(139,92,246,0.2)] text-[var(--cosmic-purple)]';
       case 'hard':
-        return 'bg-red-500/10 border-red-500/30 text-red-300';
+        return 'bg-[rgba(239,68,68,0.1)] border-[rgba(239,68,68,0.2)] text-[var(--danger)]';
       default:
-        return 'bg-gray-500/10 border-gray-500/30 text-gray-300';
+        return 'bg-[rgba(148,163,184,0.05)] border-[var(--border-subtle)] text-[var(--text-muted)]';
     }
   };
 
   if (history.length === 0) {
     return (
-      <div className="min-h-screen bg-[#0B132B] text-white py-10 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
-            Quiz History
-          </h1>
-
-          <div className="flex flex-col items-center justify-center py-20 space-y-6">
-            <div className="text-6xl">📋</div>
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-white">No Quiz History Yet</h2>
-              <p className="text-gray-400">
-                Your quiz attempts will appear here once you complete a quiz.
-              </p>
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+        <div className="max-w-lg mx-auto w-full relative z-10">
+          <div className="glass-card text-center">
+            <div className="mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--cosmic-purple)] to-[var(--cosmic-blue)] shadow-lg shadow-[var(--cosmic-glow)]">
+                <span className="text-3xl floating">✦</span>
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold glow-text mb-2">Quiz History</h1>
+            <div className="flex flex-col items-center justify-center py-10 space-y-4">
+              <div className="text-5xl opacity-30">✦</div>
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">No Quiz History Yet</h2>
+                <p className="text-[var(--text-muted)]">
+                  Your quiz attempts will appear here once you complete a quiz.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -63,150 +67,113 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B132B] text-white py-10 px-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-
+    <div className="flex-1 px-4 py-8 sm:py-10">
+      <div className="max-w-3xl mx-auto space-y-6 relative z-10">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
-              Quiz History
-            </h1>
-            <p className="text-gray-400 text-sm mt-2">
-              {history.length} quiz attempt{history.length !== 1 ? 's' : ''}
-            </p>
-          </div>
+        <div className="glass-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold glow-text">
+                Quiz History
+              </h1>
+              <p className="text-[var(--text-muted)] text-sm mt-1">
+                {history.length} quiz attempt{history.length !== 1 ? 's' : ''}
+              </p>
+            </div>
 
-          {/* Clear History Button */}
-          <div className="relative">
-            {showConfirm ? (
-              <div className="absolute right-0 top-0 bg-[#1C2541] border border-red-500/30 rounded-lg p-4 min-w-xs shadow-lg z-10">
-                <p className="text-sm font-medium mb-3">Clear all history?</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowConfirm(false)}
-                    className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm font-medium transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleClearHistory}
-                    className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
-                  >
-                    Confirm
-                  </button>
+            {/* Clear History Button */}
+            <div className="relative">
+              {showConfirm ? (
+                <div className="absolute right-0 top-0 bg-[var(--nebula-surface)] border border-[rgba(239,68,68,0.2)] rounded-xl p-4 min-w-[200px] shadow-xl z-10">
+                  <p className="text-sm font-medium mb-3 text-[var(--text-primary)]">Clear all history?</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowConfirm(false)}
+                      className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors secondary-btn text-center"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleClearHistory}
+                      className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-[rgba(239,68,68,0.15)] text-[var(--danger)] hover:bg-[rgba(239,68,68,0.25)]"
+                    >
+                      Confirm
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowConfirm(true)}
-                className="flex items-center space-x-2 bg-[#1C2541] hover:bg-red-600/20 border border-red-500/30 text-red-400 hover:text-red-300 px-4 py-2.5 rounded-lg transition-all text-sm font-medium"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>Clear History</span>
-              </button>
-            )}
+              ) : (
+                <button
+                  onClick={() => setShowConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.04)] text-[var(--danger)] hover:bg-[rgba(239,68,68,0.08)] transition-all text-sm font-medium"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Clear</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* History Cards */}
         <div className="space-y-3">
-          {history.map((item) => (
+          {history.map((item, idx) => (
             <div
-              key={item.id}
-              className="bg-[#1C2541]/50 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-all"
+              key={idx}
+              className="glass-card p-0 overflow-hidden"
+              style={{ padding: 0 }}
             >
               {/* Summary Row */}
               <button
-                onClick={() => toggleExpanded(item.id)}
-                className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors text-left"
+                onClick={() => toggleExpanded(idx)}
+                className="w-full p-4 flex items-center justify-between hover:bg-[rgba(148,163,184,0.03)] transition-colors text-left"
               >
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h3 className="font-semibold text-white truncate">
+                    <h3 className="font-semibold text-[var(--text-primary)] truncate">
                       {item.fileName || `Quiz ${item.date}`}
                     </h3>
                     {item.difficulty && (
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded border ${getDifficultyColor(item.difficulty)}`}>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${getDifficultyColor(item.difficulty)}`}>
                         {item.difficulty}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm">
-                    <span className="text-gray-400">{item.date}</span>
+                    <span className="text-[var(--text-muted)]">{new Date(item.date).toLocaleDateString()}</span>
                     <span className={`font-bold ${getScoreColor(item.percentage)}`}>
-                      {item.score}/{item.totalQuestions} ({item.percentage}%)
+                      {item.score}/{item.total} ({item.percentage}%)
                     </span>
                   </div>
                 </div>
 
                 <div className="flex-shrink-0 ml-4">
-                  {expandedId === item.id ? (
-                    <ChevronUp className="h-5 w-5 text-gray-400" />
+                  {expandedId === idx ? (
+                    <ChevronUp className="h-5 w-5 text-[var(--text-muted)]" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                    <ChevronDown className="h-5 w-5 text-[var(--text-muted)]" />
                   )}
                 </div>
               </button>
 
               {/* Expanded Details */}
-              {expandedId === item.id && item.reviewPayload && (
-                <div className="border-t border-gray-700 bg-black/20 p-4 space-y-3">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
-                    Question Breakdown
+              {expandedId === idx && (
+                <div className="border-t border-[var(--border-subtle)] p-4 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">
+                    Summary
                   </h4>
 
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {item.reviewPayload.map((q, idx) => (
-                      <div
-                        key={idx}
-                        className={`p-3 rounded border text-sm ${
-                          q.isCorrect
-                            ? 'bg-green-500/10 border-green-500/30'
-                            : 'bg-red-500/10 border-red-500/30'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2">
-                          <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                            q.isCorrect
-                              ? 'bg-green-500 text-white'
-                              : 'bg-red-500 text-white'
-                          }`}>
-                            {q.isCorrect ? '✓' : '✗'}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white break-words text-xs md:text-sm">
-                              {q.question}
-                            </p>
-                            <div className="mt-1 space-y-1 text-xs">
-                              <p className="text-gray-300">
-                                <span className="font-semibold">Your answer:</span> {q.options[q.userAnswer] || 'Not answered'}
-                              </p>
-                              {!q.isCorrect && (
-                                <p className={q.isCorrect ? 'text-green-300' : 'text-blue-300'}>
-                                  <span className="font-semibold">Correct:</span> {q.options[q.correctAnswer]}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Summary Stats */}
-                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-700">
-                    <div className="bg-green-500/10 border border-green-500/30 rounded p-2 text-center">
-                      <p className="text-lg font-bold text-green-400">
-                        {item.reviewPayload.filter(q => q.isCorrect).length}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl border border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.04)] text-center">
+                      <p className="text-lg font-bold" style={{ color: 'var(--success)' }}>
+                        {item.score}
                       </p>
-                      <p className="text-xs text-gray-300">Correct</p>
+                      <p className="text-xs text-[var(--text-muted)]">Correct</p>
                     </div>
-                    <div className="bg-red-500/10 border border-red-500/30 rounded p-2 text-center">
-                      <p className="text-lg font-bold text-red-400">
-                        {item.reviewPayload.filter(q => !q.isCorrect).length}
+                    <div className="p-3 rounded-xl border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.04)] text-center">
+                      <p className="text-lg font-bold" style={{ color: 'var(--danger)' }}>
+                        {item.total - item.score}
                       </p>
-                      <p className="text-xs text-gray-300">Wrong</p>
+                      <p className="text-xs text-[var(--text-muted)]">Wrong</p>
                     </div>
                   </div>
                 </div>

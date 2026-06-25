@@ -22,7 +22,7 @@ const [difficulty, setDifficulty] = useState('medium');
 
     try {
      // Look inside your uploadAndNavigate function (around line 18) and change the URL to:
-const response = await fetch('http://localhost:5001/api/generate', {
+const response = await fetch('http://localhost:5000/api/parse', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ const response = await fetch('http://localhost:5001/api/generate', {
   
   try {
     // Make sure numQuestions and difficulty are read from state
-    const response = await fetch('http://localhost:5001/api/generate', {
+    const response = await fetch('http://localhost:5000/api/parse', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

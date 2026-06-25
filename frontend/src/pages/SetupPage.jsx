@@ -30,7 +30,7 @@ export default function SetupPage() {
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch('http://localhost:5001/api/upload', {
+      const response = await fetch('http://localhost:5000/api/parse', {
         method: 'POST',
         body: formData
       });
@@ -45,7 +45,7 @@ export default function SetupPage() {
 
     } catch (err) {
       console.error("Network connection or fetch error:", err);
-      setError('Failed to fetch parsing data. Ensure backend server is running on port 5001!');
+      setError('Failed to fetch parsing data. Ensure backend server is running on port 5000!');
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export default function SetupPage() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5001/api/generate', {
+      const response = await fetch('http://localhost:5000/api/quiz/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

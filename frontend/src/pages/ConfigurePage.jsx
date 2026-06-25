@@ -49,7 +49,7 @@ export default function ConfigurePage() {
     setLoading(true);
 
     try {
-     const response = await fetch('http://localhost:5001/api/generate', {
+     const response = await fetch('http://localhost:5000/api/quiz/generate', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

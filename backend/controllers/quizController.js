@@ -31,22 +31,22 @@ Return ONLY a valid JSON array, no other text:
 ]`;
 
     const response = await axios.post(
-      'https://api.anthropic.com/v1/messages',
+      'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
+        model: 'anthropic/claude-sonnet-4-5',
         messages: [{ role: 'user', content: prompt }]
       },
       {
         headers: {
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json'
+          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://localhost:5173',
+          'X-Title': 'AI Quiz Generator'
         }
       }
     );
 
-    const text = response.data.content[0].text;
+    const text = response.data.choices[0].message.content;
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('No JSON found in response');
     const questions = JSON.parse(jsonMatch[0]);
@@ -59,26 +59,26 @@ Return ONLY a valid JSON array, no other text:
 
 exports.getHint = async (req, res) => {
   try {
-    const { question, options, userAnswer } = req.body;
+    const { question, options } = req.body;
     const response = await axios.post(
-      'https://api.anthropic.com/v1/messages',
+      'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'claude-sonnet-4-6',
-        max_tokens: 200,
+        model: 'anthropic/claude-sonnet-4-5',
         messages: [{
           role: 'user',
-          content: `Give a short hint (2-3 sentences) for this question without revealing the answer:\n${question}\nOptions: ${JSON.stringify(options)}`
+          content: `Give a short hint (2-3 sentences) without revealing the answer:\n${question}\nOptions: ${JSON.stringify(options)}`
         }]
       },
       {
         headers: {
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json'
+          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://localhost:5173',
+          'X-Title': 'AI Quiz Generator'
         }
       }
     );
-    res.json({ hint: response.data.content[0].text });
+    res.json({ hint: response.data.choices[0].message.content });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

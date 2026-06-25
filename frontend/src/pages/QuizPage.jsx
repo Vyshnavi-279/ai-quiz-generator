@@ -1,126 +1,352 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+/* ===== Starfield ===== */
+function Starfield() {
+  const stars = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    duration: 2 + Math.random() * 3,
+    delay: Math.random() * 3,
+  }));
+
+  return (
+    <div className="starfield">
+      {stars.map(s => (
+        <div
+          key={s.id}
+          className="star"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            '--duration': `${s.duration}s`,
+            '--delay': `${s.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ===== Golden Particles ===== */
+function GoldenParticles() {
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    duration: 8 + Math.random() * 10,
+    delay: Math.random() * 8,
+  }));
+
+  return (
+    <div className="golden-particles">
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="golden-particle"
+          style={{
+            left: `${p.left}%`,
+            '--duration': `${p.duration}s`,
+            '--delay': `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ===== Racing Cars ===== */
+function RacingCars() {
+  const Car1 = () => (
+    <div className="racing-car car-1">
+      <div className="car-body gryffindor">
+        <div className="cockpit" />
+        <div className="spoiler" />
+        <div className="gryffindor-stripe" />
+        <div className="car-wheels">
+          <div className="wheel" />
+          <div className="wheel" />
+        </div>
+        <div className="wizard-hat" />
+        <div className="wizard-hat-brim" />
+        <span className="hat-star">★</span>
+      </div>
+      <div className="exhaust-flame" />
+    </div>
+  );
+
+  const Car2 = () => (
+    <div className="racing-car car-2">
+      <div className="car-body slytherin">
+        <div className="cockpit" />
+        <div className="spoiler" />
+        <div className="slytherin-stripe" />
+        <div className="car-wheels">
+          <div className="wheel" />
+          <div className="wheel" />
+        </div>
+        <div className="wizard-hat" />
+        <div className="wizard-hat-brim" />
+        <span className="hat-star">★</span>
+      </div>
+      <div className="exhaust-flame" />
+    </div>
+  );
+
+  return (
+    <div className="racing-cars-container">
+      <Car1 />
+      <Car2 />
+      <div className="race-track-line" />
+    </div>
+  );
+}
+
+/* ===== Main Component ===== */
 export default function QuizPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Extract questions array passed from the SetupPage component
-  const questions = location.state?.questions || [];
-  const topic = location.state?.topic || 'Cyber Security';
+  const { questions, fileName, difficulty } = location.state || {};
 
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [score, setScore] = useState(0);
-  const [showResults, setShowResults] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(120);
+  const [slideIn, setSlideIn] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [hintLoading, setHintLoading] = useState(false);
+  const [hintText, setHintText] = useState('');
+  const questionRef = useRef(null);
 
-  // Fallback check if someone accesses /quiz directly without data
-  if (questions.length === 0) {
-    return (
-      <div className="min-h-screen bg-[#0B132B] text-white flex flex-col items-center justify-center p-6">
-        <p className="text-gray-400 mb-4">No quiz questions found. Please configure your source files first.</p>
-        <button onClick={() => navigate('/')} className="bg-teal-500 text-slate-950 px-6 py-2 rounded-xl font-bold">
-          Go Back to Setup
-        </button>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!questions || questions.length === 0) {
+      navigate('/');
+    }
+  }, [questions, navigate]);
 
-  const currentQuestion = questions[currentIdx];
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const handleOptionClick = (option) => {
-    if (selectedOption) return; // Prevent changing answers
-    setSelectedOption(option);
-    if (option === currentQuestion.answer) {
-      setScore(score + 1);
+  // Trigger slide-in animation on question change
+  useEffect(() => {
+    setSlideIn(false);
+    setShowHint(false);
+    setHintText('');
+    const timeout = setTimeout(() => setSlideIn(true), 50);
+    return () => clearTimeout(timeout);
+  }, [currentIndex]);
+
+  const handleRipple = useCallback((e) => {
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  }, []);
+
+  const handleHint = async () => {
+    setHintLoading(true);
+    setShowHint(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/quiz/hint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: currentQuestion.question,
+          options: currentQuestion.options,
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setHintText(data.hint);
+      } else {
+        setHintText('The crystal ball is cloudy... try your own wits!');
+      }
+    } catch {
+      setHintText('The crystal ball is cloudy... try your own wits!');
+    } finally {
+      setHintLoading(false);
     }
   };
 
-  const handleNext = () => {
-    setSelectedOption(null);
-    if (currentIdx + 1 < questions.length) {
-      setCurrentIdx(currentIdx + 1);
-    } else {
-      setShowResults(true);
-    }
+  if (!questions || questions.length === 0) return null;
+
+  const currentQuestion = questions[currentIndex];
+  const totalQuestions = questions.length;
+
+  const handleSelect = (key) => {
+    setSelectedAnswers(prev => ({ ...prev, [currentQuestion.id]: key }));
   };
+
+  const handleSubmit = () => {
+    navigate('/results', { state: { questions, selectedAnswers, fileName, difficulty } });
+  };
+
+  const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+  const progress = ((currentIndex + 1) / totalQuestions) * 100;
+  const isTimerDanger = timeLeft < 30;
 
   return (
-    <div className="min-h-screen bg-[#0B132B] text-white flex flex-col items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-[#1C2541]/50 border border-gray-700 rounded-2xl p-8 shadow-2xl">
-        
-        {!showResults ? (
-          <div>
-            {/* Header Status */}
-            <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-teal-400">🛡️ {topic}</span>
-              <span className="text-sm font-black text-cyan-400">Question {currentIdx + 1} of {questions.length}</span>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
+      <Starfield />
+      <GoldenParticles />
+      <RacingCars />
+      <div className="fog-overlay" />
+
+      <div className="w-full max-w-[600px] mx-auto relative z-10">
+        <div className="glass-card">
+          <div className="shimmer-border" />
+
+          <div className="main-card-content">
+            {/* Title Bar */}
+            <div className="text-center mb-6">
+              <h2 className="text-xl md:text-2xl font-black gold-glow">
+                The Triwizard Quiz Tournament
+              </h2>
             </div>
 
-            {/* Question Text */}
-            <h2 className="text-xl font-bold text-gray-100 mb-6">{currentQuestion.question}</h2>
+            {/* Progress Bar */}
+            <div className="mb-4">
+              <div className="racing-progress-container">
+                <div className="racing-progress-fill" style={{ width: `${progress}%` }} />
+                <div className="progress-car" style={{ left: `${progress}%` }}>
+                  🏎
+                </div>
+              </div>
+              <div className="flex justify-between mt-1 text-xs font-semibold" style={{ color: 'var(--sage-green)' }}>
+                <span>★ Start</span>
+                <span>{currentIndex + 1}/{totalQuestions}</span>
+                <span>★ Finish</span>
+              </div>
+            </div>
 
-            {/* Options List */}
+            {/* Timer */}
+            <div className="text-center mb-6">
+              <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${isTimerDanger ? 'border-[var(--gryffindor-red)] bg-[rgba(196,30,58,0.1)]' : 'border-[var(--gold-border)] bg-[rgba(255,215,0,0.05)]'}`}>
+                <span>⏳</span>
+                <span className={`text-xl font-bold font-mono ${isTimerDanger ? 'timer-danger' : 'timer-normal'}`}>
+                  {formatTime(timeLeft)}
+                </span>
+                {isTimerDanger && (
+                  <span className="text-xs text-[var(--gryffindor-red)] font-semibold animate-pulse ml-1">
+                    The spell is fading!
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Question Card */}
+            <div
+              ref={questionRef}
+              className={`transition-all duration-500 mb-6 ${slideIn ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}
+            >
+              <div
+                className="p-5 rounded-2xl"
+                style={{
+                  background: 'rgba(20, 40, 15, 0.9)',
+                  border: '1px solid var(--gold-border)',
+                  position: 'relative',
+                }}
+              >
+                {/* Gold decorative corners */}
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[var(--magical-gold)] rounded-tl-lg" />
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[var(--magical-gold)] rounded-tr-lg" />
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[var(--magical-gold)] rounded-bl-lg" />
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[var(--magical-gold)] rounded-br-lg" />
+
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold text-[var(--magical-gold)] bg-[rgba(255,215,0,0.1)] px-3 py-1 rounded-full">
+                    Question {currentIndex + 1}
+                  </span>
+                </div>
+                <h3 className="text-lg md:text-xl font-bold leading-snug" style={{ color: 'var(--sage-green)' }}>
+                  {currentQuestion.question}
+                </h3>
+              </div>
+            </div>
+
+            {/* Options */}
             <div className="space-y-3 mb-6">
-              {currentQuestion.options.map((option, idx) => {
-                let btnStyle = "border-gray-700 bg-[#1C2541]/30 hover:border-teal-500 hover:bg-teal-500/5 text-gray-300";
-                
-                if (selectedOption) {
-                  if (option === currentQuestion.answer) {
-                    btnStyle = "border-emerald-500 bg-emerald-500/20 text-emerald-300"; // Correct Answer
-                  } else if (option === selectedOption) {
-                    btnStyle = "border-rose-500 bg-rose-500/20 text-rose-300"; // Wrong Choice
-                  } else {
-                    btnStyle = "border-gray-800 bg-gray-900/20 text-gray-500 opacity-60"; // Non-selected options
-                  }
-                }
-
+              {Object.entries(currentQuestion.options).map(([key, value], i) => {
+                const isSelected = selectedAnswers[currentQuestion.id] === key;
                 return (
                   <button
-                    key={idx}
-                    disabled={!!selectedOption}
-                    onClick={() => handleOptionClick(option)}
-                    className={`w-full text-left p-4 rounded-xl border text-sm font-semibold transition-all ${btnStyle}`}
+                    key={key}
+                    onClick={() => handleSelect(key)}
+                    className={`option-btn ${key} ${isSelected ? 'selected' : ''}`}
                   >
-                    {option}
+                    <span className="option-key">{key}</span>
+                    <span>{value}</span>
+                    {isSelected && (
+                      <span className="ml-auto" style={{ color: 'var(--magical-gold)' }}>✦</span>
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            {/* Footer Navigation */}
-            <div className="flex justify-end">
+            {/* Hint Button */}
+            <div className="text-center mb-4">
               <button
-                disabled={!selectedOption}
-                onClick={handleNext}
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 disabled:from-gray-700 disabled:to-gray-800 text-slate-950 disabled:text-gray-500 font-extrabold px-6 py-2.5 rounded-xl shadow-md transition-all"
+                onClick={handleHint}
+                className="px-4 py-2 rounded-xl font-semibold text-sm border border-[var(--gold-border)] bg-[rgba(74,144,164,0.08)] text-[var(--ravenclaw-blue)] hover:bg-[rgba(74,144,164,0.15)] transition-all"
               >
-                {currentIdx + 1 === questions.length ? 'Finish Quiz 🏁' : 'Next Question →'}
+                🔮 Consult the Crystal Ball
               </button>
-            </div>
-          </div>
-        ) : (
-          /* Results Dashboard view */
-          <div className="text-center py-6">
-            <h2 className="text-3xl font-black text-teal-400 mb-2">Quiz Completed! 🎉</h2>
-            <p className="text-gray-400 text-sm mb-6">You successfully navigated the cyber challenge</p>
-            
-            <div className="inline-block bg-[#0B132B]/80 border border-gray-700 px-8 py-6 rounded-2xl mb-8">
-              <span className="block text-xs uppercase tracking-widest text-gray-500 font-bold mb-1">Final Score</span>
-              <span className="text-5xl font-black text-cyan-400">{score} <span className="text-2xl text-gray-500">/ {questions.length}</span></span>
+              {showHint && (
+                <div className="mt-3 p-3 rounded-xl border border-[rgba(74,144,164,0.4)] bg-[rgba(74,144,164,0.08)] text-sm text-left">
+                  {hintLoading ? (
+                    <span className="text-[var(--sage-green)]">Gazing into the crystal ball...</span>
+                  ) : (
+                    <span style={{ color: 'var(--ravenclaw-blue)' }}>💡 {hintText}</span>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="block">
-              <button 
-                onClick={() => navigate('/')}
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold px-6 py-3 rounded-xl transition-all"
+            {/* Navigation */}
+            <div className="flex justify-between items-center pt-4" style={{ borderTop: '1px solid var(--gold-border)' }}>
+              <button
+                onClick={() => setCurrentIndex(prev => prev - 1)}
+                disabled={currentIndex === 0}
+                className="px-4 py-2.5 rounded-xl font-bold text-sm border border-[var(--gold-border)] bg-[rgba(255,215,0,0.05)] text-[var(--sage-green)] hover:bg-[rgba(255,215,0,0.1)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                🔄 Create Another Quiz
+                ← Wingardium
               </button>
+
+              {currentIndex < totalQuestions - 1 ? (
+                <button
+                  onClick={() => setCurrentIndex(prev => prev + 1)}
+                  className="px-4 py-2.5 rounded-xl font-bold text-sm border border-[var(--gold-border)] bg-[rgba(255,215,0,0.1)] text-[var(--magical-gold)] hover:bg-[rgba(255,215,0,0.15)] transition-all"
+                >
+                  Leviosa →
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => { handleRipple(e); handleSubmit(); }}
+                  className="magical-btn px-5 py-2.5 text-sm"
+                >
+                  ⚡ Reveal the Magic
+                </button>
+              )}
             </div>
           </div>
-        )}
-
+        </div>
       </div>
     </div>
   );

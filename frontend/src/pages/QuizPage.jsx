@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../utils/api';
 
 /* ===== Main Component ===== */
 export default function QuizPage() {
@@ -62,7 +63,7 @@ export default function QuizPage() {
     setHintLoading(true);
     setShowHint(true);
     try {
-      const response = await fetch('http://localhost:5000/api/quiz/hint', {
+      const response = await fetch(`${API_BASE_URL}/api/quiz/hint`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

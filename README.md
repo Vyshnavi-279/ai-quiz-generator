@@ -332,24 +332,49 @@ python -m pytest test_parser.py
 
 ## 🚢 Deployment
 
-### Frontend (Vercel/Netlify)
-```bash
-cd frontend
-npm run build
-# Deploy the dist/ folder
-```
+### Deploy to Render (Recommended)
 
-### Backend (Heroku/Railway)
-```bash
-cd backend
-npm run build
-git push heroku main
-```
+This project includes a `render.yaml` for easy deployment to [Render](https://render.com). All three services (frontend, backend, parser) deploy together.
 
-### Parser (Heroku/Railway)
+#### One-Click Deploy
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+#### Manual Setup
+
+1. **Push your code to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Prepare for Render deployment"
+   git push origin main
+   ```
+
+2. **Create a Render account** at [render.com](https://render.com) and connect your GitHub repo.
+
+3. **Use the Blueprint (render.yaml)**:
+   - Go to Dashboard → Blueprint
+   - Connect your repository
+   - Render will auto-detect `render.yaml` and create 3 services:
+     - `ai-quiz-frontend` (Static Site)
+     - `ai-quiz-backend` (Web Service)
+     - `ai-quiz-parser` (Web Service)
+
+4. **Set the API Key** (required):
+   - Go to `ai-quiz-backend` → Environment
+   - Add `OPENROUTER_API_KEY` with your [OpenRouter](https://openrouter.ai/) API key
+
+5. **Get your deployed URLs**:
+   - Frontend: `https://ai-quiz-frontend.onrender.com`
+   - Backend: `https://ai-quiz-backend.onrender.com`
+   - Parser: `https://ai-quiz-parser.onrender.com`
+
+#### Deploy Updates
+
+Just push to your GitHub repository — Render auto-deploys from the `main` branch.
+
+### Alternative: Docker (Coming Soon)
 ```bash
-cd parser
-git push heroku main
+docker-compose up -d
 ```
 
 ## 🤝 Contributing

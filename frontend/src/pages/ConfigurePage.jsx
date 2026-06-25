@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../utils/api';
 
 export default function ConfigurePage() {
   const location = useLocation();
@@ -28,7 +29,7 @@ export default function ConfigurePage() {
         ? slides.map(s => `Slide ${s.slideNumber}: ${s.title}\n${s.content}`).join('\n\n')
         : 'Sample content about artificial intelligence and machine learning';
 
-      const response = await fetch('http://localhost:5000/api/quiz/generate', {
+      const response = await fetch(`${API_BASE_URL}/api/quiz/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slideContent, questionCount, difficulty, fileName })

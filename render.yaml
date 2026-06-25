@@ -1,0 +1,52 @@
+# Render Deployment Configuration for AI Quiz Generator
+# Three services: Frontend (static), Backend (Node.js), Parser (Python)
+
+services:
+  # ===== Frontend: Static Site =====
+  - type: web
+    name: ai-quiz-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://ai-quiz-backend.onrender.com
+      - key: VITE_PARSER_URL
+        value: https://ai-quiz-parser.onrender.com
+
+  # ===== Backend: Node.js Web Service =====
+  - type: web
+    name: ai-quiz-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: PORT
+        value: "5000"
+      - key: PARSER_URL
+        value: https://ai-quiz-parser.onrender.com
+      - key: FRONTEND_URL
+        value: https://ai-quiz-frontend.onrender.com
+      - key: OPENROUTER_API_KEY
+        sync: false  # Must be set manually in Render dashboard
+
+  # ===== Parser: Python Web Service =====
+  - type: web
+    name: ai-quiz-parser
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: cd parser && pip install -r requirements.txt
+    startCommand: cd parser && gunicorn app:app --bind 0.0.0.0:$PORT --workers 2
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: PORT
+        value: "5001"

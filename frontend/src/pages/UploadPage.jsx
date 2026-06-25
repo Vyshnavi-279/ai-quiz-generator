@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../utils/api';
 
 export default function UploadPage() {
   const navigate = useNavigate();
@@ -21,8 +22,7 @@ const [difficulty, setDifficulty] = useState('medium');
     formData.append('file', selectedFile);
 
     try {
-     // Look inside your uploadAndNavigate function (around line 18) and change the URL to:
-const response = await fetch('http://localhost:5000/api/parse', {
+const response = await fetch(`${API_BASE_URL}/api/parse`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -85,15 +85,15 @@ const response = await fetch('http://localhost:5000/api/parse', {
   
   try {
     // Make sure numQuestions and difficulty are read from state
-    const response = await fetch('http://localhost:5000/api/parse', {
+    const response = await fetch(`${API_BASE_URL}/api/parse`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        numQuestions: numQuestions, // <-- reads from state
-        difficulty: difficulty,     // <-- reads from state
-        topic: 'Cyber Security Presentation' // Or your file name variable
+        numQuestions: numQuestions,
+        difficulty: difficulty,
+        topic: 'Cyber Security Presentation'
       }),
     });
 

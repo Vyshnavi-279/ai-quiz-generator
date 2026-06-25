@@ -7,12 +7,17 @@ export default function HistoryPage() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    const storedHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]');
-    setHistory(storedHistory.sort((a, b) => new Date(b.date) - new Date(a.date)));
+    try {
+      const storedHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]');
+      const sortedHistory = [...storedHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+      setHistory(sortedHistory);
+    } catch {
+      setHistory([]);
+    }
   }, []);
 
   const toggleExpanded = (id) => {
-    setExpandedId(expandedId === id ? null : id);
+    setExpandedId((currentId) => (currentId === id ? null : id));
   };
 
   const handleClearHistory = () => {

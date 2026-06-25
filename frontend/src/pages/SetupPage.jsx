@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../utils/api';
 
 /* ===== Sparkle Decorators ===== */
 function CosmicSparkles() {
@@ -75,7 +76,7 @@ export default function SetupPage() {
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch('http://localhost:5000/api/parse', {
+      const response = await fetch(`${API_BASE_URL}/api/parse`, {
         method: 'POST',
         body: formData
       });
@@ -100,7 +101,7 @@ export default function SetupPage() {
         ? parseResult.slides.map(s => `Slide ${s.slideNumber}: ${s.title}\n${s.content}`).join('\n\n')
         : 'Sample content';
 
-      const response = await fetch('http://localhost:5000/api/quiz/generate', {
+      const response = await fetch(`${API_BASE_URL}/api/quiz/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

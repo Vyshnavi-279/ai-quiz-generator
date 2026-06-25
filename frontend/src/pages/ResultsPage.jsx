@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 /* ===== Animated Score Counter ===== */
@@ -26,16 +26,25 @@ function CountUp({ target, duration = 1500 }) {
 export default function ResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { questions, selectedAnswers, fileName, difficulty } = location.state || {};
+  const { questions, selectedAnswers = {}, fileName, difficulty } = location.state || {};
 
   const [ringDrawn, setRingDrawn] = useState(false);
 
-  if (!questions) {
-    navigate('/');
+  useEffect(() => {
+    if (!questions || questions.length === 0) {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    const timer = setTimeout(() => setRingDrawn(true), 300);
+    return () => clearTimeout(timer);
+  }, [questions, navigate]);
+
+  if (!questions || questions.length === 0) {
     return null;
   }
 
-  const correct = questions.filter(q => selectedAnswers[q.id] === q.correctAnswer);
+  const correct = questions.filter((q) => selectedAnswers[q.id] === q.correctAnswer);
   const score = correct.length;
   const total = questions.length;
   const percentage = Math.round((score / total) * 100);
@@ -59,20 +68,13 @@ export default function ResultsPage() {
     return 'F';
   };
 
-  // Trigger ring draw
   useEffect(() => {
-    const timer = setTimeout(() => setRingDrawn(true), 300);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const saveHistory = () => {
     try {
       const history = JSON.parse(localStorage.getItem('quizHistory') || '[]');
       history.unshift({ fileName, difficulty, score, total, percentage, date: new Date().toISOString() });
       localStorage.setItem('quizHistory', JSON.stringify(history));
     } catch {}
-  };
-  saveHistory();
+  }, [fileName, difficulty, score, total, percentage]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 sm:py-8">

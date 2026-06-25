@@ -10,3 +10,7 @@ __pycache__/
 backend/uploads/*
 !backend/uploads/.gitkeep
 .env
+
+# Build output
+frontend/dist/
+backend/uploads/*

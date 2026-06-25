@@ -40,7 +40,7 @@ Return ONLY a valid JSON array, no other text:
         headers: {
           'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:5173',
+          'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:5173',
           'X-Title': 'AI Quiz Generator'
         }
       }
@@ -73,7 +73,7 @@ exports.getHint = async (req, res) => {
         headers: {
           'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:5173',
+          'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:5173',
           'X-Title': 'AI Quiz Generator'
         }
       }

@@ -1,6 +1,8 @@
 const axios = require('axios');
 const FormData = require('form-data');
 
+const PARSER_URL = process.env.PARSER_URL || 'http://localhost:5001';
+
 exports.parseFile = async (req, res) => {
   try {
     if (!req.file) {
@@ -14,7 +16,7 @@ exports.parseFile = async (req, res) => {
     });
 
     const response = await axios.post(
-      'http://localhost:5001/parse',
+      `${PARSER_URL}/parse`,
       form,
       { headers: form.getHeaders() }
     );

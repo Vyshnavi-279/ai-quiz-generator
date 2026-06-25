@@ -1,10 +1,12 @@
+# Dependencies
 node_modules/
-.env
-.env.*
-dist/
-__pycache__/
-venv/
 .DS_Store
-*.pyc
-build/
-coverage/
+
+# Python Environment
+.venv/
+__pycache__/
+
+# Local Uploads and Keys
+backend/uploads/*
+!backend/uploads/.gitkeep
+.env

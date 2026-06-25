@@ -1,273 +1,163 @@
-import { useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Download, RotateCcw, Upload, BarChart3 } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import { CheckCircle2, Download, RotateCcw, Upload, XCircle } from 'lucide-react';
 
 export default function ResultsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const result = location.state?.result;
 
-  const [expandedQuestions, setExpandedQuestions] = useState({});
+  const state = location.state || {};
+  const questions = state.questions || [];
+  const userAnswers = state.userAnswers || {};
+  const fileName = state.fileName || 'Untitled presentation';
+  const difficulty = state.difficulty || 'Medium';
+  const questionCount = state.questionCount || questions.length || 0;
 
-  if (!result) {
+  const reviewData = useMemo(() => {
+    return questions.map((question) => {
+      const userAnswer = userAnswers[question.id] || userAnswers[String(question.id)] || '';
+      return {
+        ...question,
+        userAnswer,
+        isCorrect: userAnswer === question.correctAnswer,
+      };
+    });
+  }, [questions, userAnswers]);
+
+  const correctCount = reviewData.filter((item) => item.isCorrect).length;
+  const total = reviewData.length || questionCount || 0;
+  const wrongCount = total - correctCount;
+  const percentage = total ? Math.round((correctCount / total) * 100) : 0;
+  const scoreText = `${correctCount}/${total}`;
+
+  const motivation = percentage >= 80 ? 'Excellent work! 🎉' : percentage >= 50 ? 'Good effort! 💪' : 'Keep practicing! 📚';
+
+  useEffect(() => {
+    const history = JSON.parse(localStorage.getItem('quizHistory') || '[]');
+    history.unshift({
+      fileName,
+      date: new Date().toLocaleDateString(),
+      score: correctCount,
+      total,
+      difficulty,
+      questions: reviewData,
+    });
+    localStorage.setItem('quizHistory', JSON.stringify(history.slice(0, 10)));
+  }, [correctCount, difficulty, fileName, reviewData, total]);
+
+  if (!questions.length) {
     return (
-      <div className="min-h-screen bg-[#0B132B] text-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">No Results Found</h1>
-          <p className="text-gray-400 mb-6">Complete a quiz to see your results.</p>
-          <button
-            onClick={() => navigate('/upload')}
-            className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:opacity-90 text-slate-950 font-bold px-6 py-3 rounded-lg transition-all"
-          >
-            Take a Quiz
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-slate-100">
+        <div className="max-w-md rounded-3xl border border-slate-800 bg-slate-900/80 p-8 text-center shadow-2xl shadow-slate-950/50">
+          <h1 className="text-2xl font-semibold">No results found</h1>
+          <p className="mt-3 text-sm text-slate-400">Complete a quiz to see your score summary here.</p>
+          <button type="button" onClick={() => navigate('/')} className="mt-6 rounded-2xl bg-teal-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-400">
+            Start a quiz
           </button>
         </div>
       </div>
     );
   }
 
-  const { score, totalQuestions, percentage, reviewPayload, date } = result;
-  const correctCount = score;
-  const wrongCount = totalQuestions - score;
-
-  const getMotivationalMessage = () => {
-    if (percentage >= 80) {
-      return { text: 'Outstanding Performance! 🎉', color: 'from-green-500 to-emerald-500' };
-    } else if (percentage >= 50) {
-      return { text: 'Good Job! Keep practicing 💪', color: 'from-blue-500 to-cyan-500' };
-    } else {
-      return { text: 'Room for Improvement 📚', color: 'from-orange-500 to-red-500' };
-    }
-  };
-
-  const motivation = getMotivationalMessage();
-
-  const toggleExpanded = (questionId) => {
-    setExpandedQuestions(prev => ({
-      ...prev,
-      [questionId]: !prev[questionId]
-    }));
-  };
-
-  const handleDownloadPDF = () => {
-    const element = document.getElementById('results-content');
-    const opt = {
-      margin: 10,
-      filename: `quiz-results-${date}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-    };
-    html2pdf().set(opt).from(element).save();
-  };
-
   const handleRetakeQuiz = () => {
-    navigate('/configure', { state: { sourceData: { questions: reviewPayload.map(q => ({
-      id: q.id,
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      slideReference: q.slideReference,
-      difficulty: q.difficulty
-    })) } } });
+    navigate('/quiz', {
+      state: {
+        questions,
+        fileName,
+        difficulty,
+        questionCount,
+      },
+    });
   };
 
   const handleUploadNew = () => {
-    navigate('/upload');
+    navigate('/');
   };
 
-  const handleViewAnalytics = () => {
-    navigate('/analytics', { state: { result, reviewPayload } });
+  const handleDownloadPdf = () => {
+    window.print();
   };
+
+  const radius = 74;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="min-h-screen bg-[#0B132B] text-white py-10 px-4">
-      <div className="max-w-4xl mx-auto space-y-8" id="results-content">
-
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
-            Quiz Complete!
-          </h1>
-          <p className="text-gray-400 text-sm">Completed on {date}</p>
+    <div className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100 sm:px-6 lg:px-8">
+      <div id="results-content" className="mx-auto flex max-w-5xl flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/50 sm:p-8 lg:p-10">
+        <div className="space-y-2 text-center">
+          <p className="text-sm uppercase tracking-[0.3em] text-teal-400">Quiz complete</p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Results Summary</h1>
+          <p className="text-sm text-slate-400">{fileName} • {difficulty} difficulty</p>
         </div>
 
-        {/* Score Gauge */}
-        <div className="flex justify-center">
-          <div className="relative w-48 h-48">
-            <svg viewBox="0 0 200 200" className="w-full h-full">
-              {/* Background circle */}
-              <circle cx="100" cy="100" r="90" fill="none" stroke="#1C2541" strokeWidth="12" />
-
-              {/* Progress circle */}
-              <circle
-                cx="100"
-                cy="100"
-                r="90"
-                fill="none"
-                stroke="url(#scoreGradient)"
-                strokeWidth="12"
-                strokeDasharray={`${(percentage / 100) * 565.48} 565.48`}
-                strokeLinecap="round"
-                style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px', transition: 'stroke-dasharray 0.5s ease' }}
-              />
-
-              {/* Gradient */}
-              <defs>
-                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#14b8a6" />
-                  <stop offset="100%" stopColor="#06b6d4" />
-                </linearGradient>
-              </defs>
-
-              {/* Center text */}
-              <text x="100" y="100" textAnchor="middle" dy="0.3em" className="text-2xl font-bold fill-white">
-                <tspan x="100" dy="0">{percentage}%</tspan>
-              </text>
-              <text x="100" y="100" textAnchor="middle" dy="1.5em" className="text-lg fill-gray-400">
-                <tspan x="100" dy="1.2em">{score}/{totalQuestions}</tspan>
-              </text>
+        <div className="flex flex-col items-center justify-center gap-6 rounded-3xl border border-slate-800 bg-slate-800/70 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="relative h-44 w-44">
+            <svg viewBox="0 0 200 200" className="h-44 w-44 -rotate-90">
+              <circle cx="100" cy="100" r={radius} stroke="#1e293b" strokeWidth="16" fill="none" />
+              <circle cx="100" cy="100" r={radius} stroke="#f59e0b" strokeWidth="16" fill="none" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} />
             </svg>
-          </div>
-        </div>
-
-        {/* Motivational Message */}
-        <div className={`bg-gradient-to-r ${motivation.color} rounded-xl p-6 text-center`}>
-          <p className="text-lg md:text-xl font-bold text-white">{motivation.text}</p>
-        </div>
-
-        {/* Stats Badges */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-green-400">✓ {correctCount}</p>
-            <p className="text-sm text-gray-300">Correct</p>
-          </div>
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-red-400">✗ {wrongCount}</p>
-            <p className="text-sm text-gray-300">Wrong</p>
-          </div>
-        </div>
-
-        {/* Review Section */}
-        {reviewPayload && reviewPayload.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white">Answer Review</h2>
-            <div className="space-y-3">
-              {reviewPayload.map((question) => (
-                <div
-                  key={question.id}
-                  className={`rounded-lg border overflow-hidden transition-all ${
-                    question.isCorrect
-                      ? 'bg-green-500/5 border-green-500/30'
-                      : 'bg-red-500/5 border-red-500/30'
-                  }`}
-                >
-                  {/* Question Header */}
-                  <button
-                    onClick={() => !question.isCorrect && toggleExpanded(question.id)}
-                    className="w-full p-4 flex items-start justify-between hover:bg-white/5 transition-colors"
-                  >
-                    <div className="flex items-start space-x-3 text-left flex-1">
-                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                        question.isCorrect
-                          ? 'bg-green-500 text-white'
-                          : 'bg-red-500 text-white'
-                      }`}>
-                        {question.isCorrect ? '✓' : '✗'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-white text-sm md:text-base break-words">
-                          {question.question}
-                        </p>
-                        {question.isCorrect && (
-                          <p className="text-xs text-green-300 mt-1">
-                            Your answer: {question.options[question.userAnswer] || question.userAnswer}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {!question.isCorrect && (
-                      <div className="flex-shrink-0 ml-2">
-                        {expandedQuestions[question.id] ? (
-                          <ChevronUp className="h-5 w-5 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-gray-400" />
-                        )}
-                      </div>
-                    )}
-                  </button>
-
-                  {/* Expanded Details (for wrong answers) */}
-                  {!question.isCorrect && expandedQuestions[question.id] && (
-                    <div className="border-t border-red-500/30 p-4 space-y-4 bg-black/20">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Your Answer</p>
-                        <div className="bg-red-500/10 border border-red-500/20 rounded p-3">
-                          <p className="text-red-300 text-sm">
-                            {question.options[question.userAnswer] || 'Not answered'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Correct Answer</p>
-                        <div className="bg-green-500/10 border border-green-500/20 rounded p-3">
-                          <p className="text-green-300 text-sm font-semibold">
-                            {question.options[question.correctAnswer]}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Explanation</p>
-                        <div className="bg-teal-500/10 border border-teal-500/20 rounded p-3">
-                          <p className="text-teal-100 text-sm leading-relaxed">
-                            {question.explanation || 'Review the relevant slide content for more information.'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-4xl font-semibold text-white">{scoreText}</span>
+              <span className="mt-2 text-sm text-slate-400">{percentage}%</span>
             </div>
           </div>
-        )}
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-gray-800">
-          <button
-            onClick={handleRetakeQuiz}
-            className="flex items-center justify-center space-x-2 bg-[#1C2541] hover:bg-[#2A3F5F] border border-gray-700 text-white font-semibold px-6 py-3 rounded-lg transition-all"
-          >
-            <RotateCcw className="h-5 w-5" />
-            <span>Retake Quiz</span>
+          <div className="flex flex-col items-center gap-3 text-center sm:items-start sm:text-left">
+            <div className="rounded-full bg-teal-500/10 px-3 py-1 text-sm font-medium text-teal-400">{motivation}</div>
+            <div className="flex flex-wrap gap-3">
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-300">✓ {correctCount} correct</span>
+              <span className="rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-300">✗ {wrongCount} wrong</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold">REVIEW & AI FEEDBACK</h2>
+            <span className="text-sm text-slate-400">{total} questions</span>
+          </div>
+
+          <div className="space-y-3">
+            {reviewData.map((question, index) => {
+              const isCorrect = question.isCorrect;
+              return (
+                <div key={question.id ?? index} className={`rounded-2xl border bg-slate-800/70 p-4 ${isCorrect ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isCorrect ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300'}`}>
+                      {isCorrect ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white">{question.question}</p>
+                      <p className={`mt-2 text-sm ${isCorrect ? 'text-emerald-300' : 'text-red-300'}`}>
+                        {isCorrect ? `Your answer: ${question.userAnswer || 'No answer'} — correct` : `Your answer: ${question.userAnswer || 'No answer'} • Correct answer: ${question.correctAnswer}`}
+                      </p>
+                      {!isCorrect && (
+                        <div className="mt-3 rounded-2xl border border-teal-500/30 bg-teal-500/10 p-3 text-sm text-teal-100">
+                          <p className="font-medium">AI explanation</p>
+                          <p className="mt-1 leading-relaxed text-teal-100/90">{question.explanation || 'Review the related content to understand the correct answer.'}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="grid gap-3 pt-2 sm:grid-cols-3">
+          <button type="button" onClick={handleRetakeQuiz} className="flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-800/80 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-700">
+            <RotateCcw className="h-4 w-4" />
+            🔄 Retake Quiz
           </button>
-
-          <button
-            onClick={handleUploadNew}
-            className="flex items-center justify-center space-x-2 bg-[#1C2541] hover:bg-[#2A3F5F] border border-gray-700 text-white font-semibold px-6 py-3 rounded-lg transition-all"
-          >
-            <Upload className="h-5 w-5" />
-            <span>Upload New PPT</span>
+          <button type="button" onClick={handleUploadNew} className="flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-800/80 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-700">
+            <Upload className="h-4 w-4" />
+            📤 Upload New PPT
           </button>
-
-          <button
-            onClick={handleDownloadPDF}
-            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-cyan-600 to-teal-600 hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg transition-all"
-          >
-            <Download className="h-5 w-5" />
-            <span>📥 Download Results PDF</span>
-          </button>
-
-          <button
-            onClick={handleViewAnalytics}
-            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg transition-all"
-          >
-            <BarChart3 className="h-5 w-5" />
-            <span>📊 View Analytics</span>
+          <button type="button" onClick={handleDownloadPdf} className="flex items-center justify-center gap-2 rounded-2xl bg-teal-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-400">
+            <Download className="h-4 w-4" />
+            📥 Download PDF
           </button>
         </div>
       </div>
